@@ -23,6 +23,16 @@ let restartGPULoc = is_dev
 			'RestartGPU.exe'
 	  );
 
+let nvInspectorLoc = is_dev
+	? process.env.NVIDIA_INSPECTOR_LOC
+	: path.join(
+		app.getPath('exe'),
+		'../',
+		'resources',
+		'extraResources',
+		'nvidiaInspector.exe'
+	);
+
 const ps = new Shell({
 	executionPolicy: 'Bypass',
 	noProfile: true,
@@ -40,6 +50,23 @@ export const resetGPU = async () => {
 				resolve(false);
 				LOGGER.error(
 					'Error recieved after running command:\n' + err.toString()
+				);
+			});
+	});
+};
+
+export const applyOC = async (clocks : {coreClock: number, memClock: number}) => {
+	return new Promise((resolve) => {
+		ps.addCommand(`${nvInspectorLoc} -setBaseClockOffset:0,0,${clocks.coreClock} -setMemoryClockOffset:0,0,${clocks.memClock}`);
+		ps.invoke()
+			.then((result) => {
+				LOGGER.info('Result applying GPU OC:\n' + result);
+				resolve(true);
+			})
+			.catch((err) => {
+				resolve(false);
+				LOGGER.error(
+					'Error received after running command:\n' + err.toString()
 				);
 			});
 	});

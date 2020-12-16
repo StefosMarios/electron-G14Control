@@ -1,6 +1,6 @@
 /** @format */
 
-import { Button, message, PageHeader, Space, Table } from 'antd';
+import {Button, InputNumber, message, PageHeader, Space, Table} from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import React, { Component } from 'react';
 import { CheckSquareOutlined } from '@ant-design/icons';
@@ -17,6 +17,7 @@ interface State {
 	columns: ColumnsType<DisplayOptionListType>;
 	popconfirm: boolean;
 	targetDisplay: DisplayOptions;
+	clocks: {coreClock: number, memClock: number};
 	plugged: boolean;
 }
 
@@ -34,6 +35,10 @@ export default class DiscreteGPU extends Component<Props, State> {
 				width: 1920,
 				height: 1080,
 				display: 0,
+			},
+			clocks: {
+				coreClock: 0,
+				memClock: 0
 			},
 			plugged: true,
 		};
@@ -109,6 +114,17 @@ export default class DiscreteGPU extends Component<Props, State> {
 				message.success('GPU reset successfully!');
 			} else {
 				message.error('GPU could not be reset.');
+			}
+		});
+	};
+
+	handleApply = async () => {
+		message.loading('Applying GPU Overclock.');
+		window.ipcRenderer.invoke('applyOC', this.state.clocks).then((result: any) => {
+			if (result) {
+				message.success('GPU OC applied successfully!');
+			} else {
+				message.error('GPU OC could not be set.');
 			}
 		});
 	};
@@ -195,7 +211,39 @@ export default class DiscreteGPU extends Component<Props, State> {
 						onClick={this.handleClick}>
 						Reset GPU
 					</Button>
-				</Space>
+					<Space direction="horizontal" style={{ marginTop: '-1rem' }}>
+					<InputNumber
+						key={0}
+						min={0}
+						max={1000}
+						formatter={(val) => val?.toString().replace(/c|\D/gm, '') + ''}
+						value={this.state.clocks.coreClock}
+						defaultValue={this.state.clocks.coreClock}
+						onChange={(e: any) => {
+
+							const clocks = this.state.clocks;
+							clocks.coreClock = e;
+							this.setState({clocks})
+						}}
+					/>
+					<InputNumber
+						key={0}
+						min={0}
+						max={3000}
+						formatter={(val) => val?.toString().replace(/c|\D/gm, '') + ''}
+						value={this.state.clocks.memClock}
+						defaultValue={this.state.clocks.memClock}
+						onChange={(e: any) => {
+							const clocks = this.state.clocks;
+							clocks.memClock = e;
+							this.setState({clocks})
+						}}
+
+					/>
+					<button onClick={this.handleApply}> Apply </button>
+
+					</Space>
+					</Space>
 				<br style={{ height: '3rem' }}></br>
 				<Space direction="vertical" style={tableStyles}>
 					<PageHeader

@@ -1,8 +1,9 @@
 /** @format */
 
-import { BrowserWindow, IpcMain } from 'electron';
-import { getDisplays, setDisplayConfig } from './gpu/DisplayConfig';
+import {BrowserWindow, IpcMain} from 'electron';
+import {getDisplays, setDisplayConfig} from './gpu/DisplayConfig';
 import {
+	applyOC,
 	getSwitchableDynamicGraphicsSettings,
 	resetGPU,
 	setSwitchableDynamicGraphicsSettings,
@@ -16,6 +17,10 @@ export const buildGPUListeners = (ipc: IpcMain, win: BrowserWindow) => {
 		} else {
 			return false;
 		}
+	});
+
+	ipc.handle('applyOC', async (event, clocks) => {
+		return await applyOC(clocks);
 	});
 
 	ipc.handle('getSwitchableDynamicGraphics', async () => {
